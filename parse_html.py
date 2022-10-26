@@ -1,16 +1,17 @@
 from bs4 import BeautifulSoup
 
 
-def get_game_links(content: str):
+def get_links_and_name(content: str):
     soup = BeautifulSoup(content, 'html.parser')
     boxes = soup.find_all(class_='-col')
     links = []
     for box in boxes:
         links.append(box.a['href'])
-    return links
+    username = soup.find('span', class_='-main').get_text()
+    return (links, username)
 
 
-def get_game_results(content_list: list):
+def get_results(content_list: list):
     results_list = {}
 
     for content in content_list:
@@ -41,3 +42,14 @@ def get_game_results(content_list: list):
         results_list[game_name] = results
 
     return results_list
+
+
+def get_lowest_submission_amount(stat_pages: list):
+    submission_amounts = []
+
+    for content in stat_pages:
+        soup = BeautifulSoup(content, 'html.parser')
+        amount = soup.find('span', class_='-value -title').get_text()
+        submission_amounts.append(int(amount))
+
+    return max(submission_amounts)
