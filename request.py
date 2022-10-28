@@ -15,7 +15,7 @@ def req_main_page(username: str):
     # print(f'https://ldjam.com/users/{username}/games')
     driver.get(f'https://ldjam.com/users/{username}/games')
     try:
-        element = WebDriverWait(driver, 10).until(
+        WebDriverWait(driver, 10).until(
             EC.presence_of_element_located(
                 (By.CLASS_NAME, '-cover'))
         )

@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
-# from matplotlib import patheffects
 import numpy as np
 
 GRADE_TYPES = ['place', 'rating', 'amount']
@@ -11,18 +10,16 @@ GRADE_TITLES = {
 }
 CRITERIAS = ['overall', 'fun', 'innovation',
              'theme', 'graphics', 'audio', 'humor', 'mood']
-# STYLES = ['dotted', 'dashed', 'dashdot']
 
 
-def make_plot(results: dict, nums: list, lowest_submission_amount: int, proper_username: str, font_scale: float):
-    plt.rc('font', size=24 * font_scale)
-    plt.rc('legend', fontsize=14 * font_scale)
+def make_plot(results: dict, nums: list, proper_username: str, scale: float):
+    plt.rc('font', size=24 * scale)
+    plt.rc('legend', fontsize=14 * scale)
+    plt.style.use('Solarize_Light2')
 
     fig = plt.figure()
     axs = fig.subplots(2, 2)
     axs = axs.flatten()
-
-    # print(axs)
 
     x = np.arange(len(results))
     for i, grade_type in enumerate(GRADE_TYPES):
@@ -33,58 +30,48 @@ def make_plot(results: dict, nums: list, lowest_submission_amount: int, proper_u
                 criterias = results[game]
                 if criteria in criterias.keys():
                     stats = criterias[criteria]
-                    # if stats['amount'] < 20:
-                    # y.append(None)
-                    # else:
                     y.append(stats[grade_type])
                 else:
                     y.append(None)
-            # grades[i].append(y.copy())
 
-            line, = axs[i].plot(x, y, label=criteria.capitalize(), linewidth=4 * font_scale,
-                                marker='o', markersize=12 * font_scale)
+            line, = axs[i].plot(x, y, label=criteria.capitalize(), linewidth=4 * scale,
+                                marker='o', markersize=12 * scale)
             line.set_dashes([4, c, 2, c])
             line.set_dash_capstyle('round')
             lines.append(line)
 
-        # axs[0].set_xlabel('games')
         axs[i].set_xticks(x, reversed(results.keys()))
 
-        axs[i].tick_params(labelsize=16 * font_scale, width=2)
+        axs[i].tick_params(labelsize=16 * scale, width=2)
         plt.setp(axs[i].get_xticklabels(), rotation=15,
                  horizontalalignment='right')
 
         ax2 = axs[i].secondary_xaxis('top')
-        # axs[i].tick_params(labelsize=20, width=2)
         ax2.set_xticks(x, nums[::-1])
+        ax2.tick_params(labelsize=20 * scale)
 
-        axs[i].set_ylabel(GRADE_TITLES[grade_type])
+        axs[i].set_ylabel(GRADE_TITLES[grade_type], fontsize=20 * scale)
 
         axs[i].grid(True)
 
-        leg = axs[i].legend(fancybox=True)
-        lined = {}  # Will map legend lines to original lines.
+        leg = axs[i].legend(fancybox=True, shadow=True)
+        lined = {}
         for legline, origline in zip(leg.get_lines(), lines):
-            legline.set_picker(True)  # Enable picking on the legend line.
+            legline.set_picker(True)
             lined[legline] = origline
 
         if grade_type == 'place':
             axs[i].yaxis.set_major_locator(ticker.MultipleLocator(100))
-            # axs[i].set_ylim(top=0, bottom=lowest_submission_amount)
             axs[i].invert_yaxis()
         elif grade_type == 'rating':
             axs[i].yaxis.set_major_locator(ticker.MultipleLocator(0.25))
             axs[i].set_ylim(top=5)
 
         def on_pick(event):
-            # On the pick event, find the original line corresponding to the legend
-            # proxy line, and toggle its visibility.
             legline = event.artist
             origline = lined[legline]
             visible = not origline.get_visible()
             origline.set_visible(visible)
-            # Change the alpha on the line in the legend so we can see what lines
-            # have been toggled.
             legline.set_alpha(1.0 if visible else 0.2)
             fig.canvas.draw()
 
@@ -122,7 +109,5 @@ def make_plot(results: dict, nums: list, lowest_submission_amount: int, proper_u
 
     fig.suptitle(f'{proper_username} - Ludum Dare')
     axs[3].set_visible(False)
-    # fig.tight_layout()
 
     plt.show()
-    # return fig
