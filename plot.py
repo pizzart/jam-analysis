@@ -11,20 +11,22 @@ GRADE_TITLES = {
 }
 CRITERIAS = ['overall', 'fun', 'innovation',
              'theme', 'graphics', 'audio', 'humor', 'mood']
-STYLES = ['dotted', 'dashed', 'dashdot']
+# STYLES = ['dotted', 'dashed', 'dashdot']
 
 
-def make_plot(results: dict, nums: list, lowest_submission_amount: int, proper_username: str):
-    plt.rc('font', size=24)
-    plt.rc('legend', fontsize=14)
+def make_plot(results: dict, nums: list, lowest_submission_amount: int, proper_username: str, font_scale: float):
+    plt.rc('font', size=24 * font_scale)
+    plt.rc('legend', fontsize=14 * font_scale)
 
     fig = plt.figure()
     axs = fig.subplots(2, 2)
     axs = axs.flatten()
+
     # print(axs)
 
     x = np.arange(len(results))
     for i, grade_type in enumerate(GRADE_TYPES):
+        lines = []
         for c, criteria in enumerate(CRITERIAS):
             y = []
             for game in reversed(results.keys()):
@@ -39,15 +41,16 @@ def make_plot(results: dict, nums: list, lowest_submission_amount: int, proper_u
                     y.append(None)
             # grades[i].append(y.copy())
 
-            line, = axs[i].plot(x, y, label=criteria.capitalize(), linewidth=4,
-                                marker='o', markersize=12)
+            line, = axs[i].plot(x, y, label=criteria.capitalize(), linewidth=4 * font_scale,
+                                marker='o', markersize=12 * font_scale)
             line.set_dashes([4, c, 2, c])
             line.set_dash_capstyle('round')
+            lines.append(line)
 
         # axs[0].set_xlabel('games')
         axs[i].set_xticks(x, reversed(results.keys()))
 
-        axs[i].tick_params(labelsize=16, width=2)
+        axs[i].tick_params(labelsize=16 * font_scale, width=2)
         plt.setp(axs[i].get_xticklabels(), rotation=15,
                  horizontalalignment='right')
 
@@ -58,7 +61,13 @@ def make_plot(results: dict, nums: list, lowest_submission_amount: int, proper_u
         axs[i].set_ylabel(GRADE_TITLES[grade_type])
 
         axs[i].grid(True)
-        axs[i].legend()
+
+        leg = axs[i].legend(fancybox=True)
+        lined = {}  # Will map legend lines to original lines.
+        for legline, origline in zip(leg.get_lines(), lines):
+            legline.set_picker(True)  # Enable picking on the legend line.
+            lined[legline] = origline
+
         if grade_type == 'place':
             axs[i].yaxis.set_major_locator(ticker.MultipleLocator(100))
             # axs[i].set_ylim(top=0, bottom=lowest_submission_amount)
@@ -66,6 +75,20 @@ def make_plot(results: dict, nums: list, lowest_submission_amount: int, proper_u
         elif grade_type == 'rating':
             axs[i].yaxis.set_major_locator(ticker.MultipleLocator(0.25))
             axs[i].set_ylim(top=5)
+
+        def on_pick(event):
+            # On the pick event, find the original line corresponding to the legend
+            # proxy line, and toggle its visibility.
+            legline = event.artist
+            origline = lined[legline]
+            visible = not origline.get_visible()
+            origline.set_visible(visible)
+            # Change the alpha on the line in the legend so we can see what lines
+            # have been toggled.
+            legline.set_alpha(1.0 if visible else 0.2)
+            fig.canvas.draw()
+
+        fig.canvas.mpl_connect('pick_event', on_pick)
 
     # place_avg = []
     # rating_avg = []
