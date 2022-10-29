@@ -9,6 +9,7 @@ Web scrapes a user's games, username and the games' ratings. (in theory it can m
 -   Selenium + GeckoDriver
 -   BeautifulSoup
 -   Matplotlib
+-   PySimpleGUI
 
 ## Screenshots
 
